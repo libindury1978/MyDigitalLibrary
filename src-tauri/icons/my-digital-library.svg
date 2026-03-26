@@ -1,0 +1,39 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="140" y1="80" x2="900" y2="940" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2F3B66" />
+      <stop offset="0.5" stop-color="#1B2542" />
+      <stop offset="1" stop-color="#0B1221" />
+    </linearGradient>
+    <linearGradient id="shelf" x1="332" y1="286" x2="692" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EEF2FF" stop-opacity="0.98" />
+      <stop offset="1" stop-color="#B9C8FF" stop-opacity="0.92" />
+    </linearGradient>
+    <linearGradient id="accent" x1="424" y1="344" x2="636" y2="628" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#55B7FF" />
+      <stop offset="1" stop-color="#2E7DFF" />
+    </linearGradient>
+    <radialGradient id="shine" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(330 220) rotate(24) scale(360 250)">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.38" />
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0" />
+    </radialGradient>
+    <filter id="shadow" x="205" y="212" width="614" height="640" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#02040A" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#bg)" />
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#shine)" />
+
+  <g filter="url(#shadow)">
+    <rect x="280" y="260" width="464" height="504" rx="54" fill="url(#shelf)" />
+    <rect x="316" y="314" width="70" height="378" rx="30" fill="#1D2E57" />
+    <rect x="406" y="334" width="78" height="358" rx="32" fill="#4E6BC0" />
+    <rect x="504" y="354" width="88" height="338" rx="34" fill="url(#accent)" />
+    <rect x="612" y="372" width="84" height="320" rx="32" fill="#7F9CFF" />
+    <rect x="316" y="710" width="380" height="18" rx="9" fill="#0B1735" fill-opacity="0.22" />
+  </g>
+
+  <circle cx="680" cy="344" r="44" fill="#93D6FF" fill-opacity="0.24" />
+  <circle cx="706" cy="344" r="26" fill="#EAF7FF" fill-opacity="0.78" />
+</svg>
