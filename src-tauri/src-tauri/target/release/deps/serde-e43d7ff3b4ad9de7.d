@@ -1,0 +1,14 @@
+/Volumes/diskA/vibecoding/MyDigitalLibrary/src-tauri/src-tauri/target/release/deps/serde-e43d7ff3b4ad9de7.d: /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Volumes/diskA/vibecoding/MyDigitalLibrary/src-tauri/src-tauri/target/release/build/serde-7560687473f58844/out/private.rs
+
+/Volumes/diskA/vibecoding/MyDigitalLibrary/src-tauri/src-tauri/target/release/deps/libserde-e43d7ff3b4ad9de7.rlib: /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Volumes/diskA/vibecoding/MyDigitalLibrary/src-tauri/src-tauri/target/release/build/serde-7560687473f58844/out/private.rs
+
+/Volumes/diskA/vibecoding/MyDigitalLibrary/src-tauri/src-tauri/target/release/deps/libserde-e43d7ff3b4ad9de7.rmeta: /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Volumes/diskA/vibecoding/MyDigitalLibrary/src-tauri/src-tauri/target/release/build/serde-7560687473f58844/out/private.rs
+
+/Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/libin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Volumes/diskA/vibecoding/MyDigitalLibrary/src-tauri/src-tauri/target/release/build/serde-7560687473f58844/out/private.rs:
+
+# env-dep:OUT_DIR=/Volumes/diskA/vibecoding/MyDigitalLibrary/src-tauri/src-tauri/target/release/build/serde-7560687473f58844/out
