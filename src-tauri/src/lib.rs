@@ -1,6 +1,7 @@
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::UNIX_EPOCH;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -10,6 +11,8 @@ struct MediaItem {
     title: String,
     path: String,
     extension: String,
+    /// 毫秒时间戳：优先文件创建时间（birthtime），不可用时回退为修改时间。
+    created_at: i64,
 }
 
 fn detect_category(ext: &str) -> Option<&'static str> {
@@ -42,6 +45,33 @@ fn walk_files(dir: &Path, output: &mut Vec<PathBuf>) {
     }
 }
 
+fn system_time_to_unix_ms(t: std::time::SystemTime) -> i64 {
+    match t.duration_since(UNIX_EPOCH) {
+        Ok(d) => {
+            let ms = d.as_millis();
+            if ms > i64::MAX as u128 {
+                i64::MAX
+            } else {
+                ms as i64
+            }
+        }
+        Err(_) => 0,
+    }
+}
+
+/// 用于排序：优先 `created`（macOS/Windows 等常见为 birthtime），否则用 `modified`。
+fn file_created_ms_for_sort(path: &Path) -> i64 {
+    let Ok(meta) = fs::metadata(path) else {
+        return 0;
+    };
+    if let Ok(t) = meta.created() {
+        return system_time_to_unix_ms(t);
+    }
+    meta.modified()
+        .map(system_time_to_unix_ms)
+        .unwrap_or(0)
+}
+
 fn to_media_item(path: &Path) -> Option<MediaItem> {
     let ext = path
         .extension()
@@ -55,12 +85,14 @@ fn to_media_item(path: &Path) -> Option<MediaItem> {
         .unwrap_or("未命名文件")
         .to_string();
     let path_str = path.to_string_lossy().to_string();
+    let created_at = file_created_ms_for_sort(path);
     Some(MediaItem {
         id: path_str.clone(),
         category: category.to_string(),
         title,
         path: path_str,
         extension: ext.to_lowercase(),
+        created_at,
     })
 }
 
