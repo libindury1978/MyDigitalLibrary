@@ -16,8 +16,13 @@
 
 ## 截图
 
-<!-- 建议在仓库中添加 docs/screenshots/ 并替换下方链接 -->
-<!-- ![主界面](docs/screenshots/main.png) -->
+主界面（演示数据）：
+
+![主界面](docs/screenshots/main.png)
+
+作品详情：
+
+![作品详情](docs/screenshots/detail.png)
 
 ## 环境要求
 
@@ -50,7 +55,7 @@ npm run build:release-app
 npm run tauri build
 ```
 
-预编译安装包请见 [GitHub Releases](https://github.com/libindury1978/MyDigitalLibrary/releases)（若已发布）。
+预编译安装包请见 [GitHub Releases](https://github.com/libindury1978/MyDigitalLibrary/releases/latest)（macOS：`My_Digital_Library_*_aarch64.dmg` 或 `.app.zip`）。
 
 ## 项目结构
 
