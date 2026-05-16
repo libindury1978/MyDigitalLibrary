@@ -18,16 +18,16 @@ struct MediaItem {
 fn detect_category(ext: &str) -> Option<&'static str> {
     let lower = ext.to_lowercase();
     if ["mp4", "mov", "mkv", "avi", "webm", "m4v"].contains(&lower.as_str()) {
-        return Some("视频");
+        return Some("video");
     }
     if ["mp3", "wav", "flac", "aac", "m4a", "ogg"].contains(&lower.as_str()) {
-        return Some("音频");
+        return Some("audio");
     }
     if ["jpg", "jpeg", "png", "gif", "webp", "bmp", "heic"].contains(&lower.as_str()) {
-        return Some("图片");
+        return Some("image");
     }
     if ["md", "txt", "pdf", "doc", "docx", "rtf"].contains(&lower.as_str()) {
-        return Some("文章");
+        return Some("article");
     }
     None
 }
@@ -82,7 +82,7 @@ fn to_media_item(path: &Path) -> Option<MediaItem> {
     let title = path
         .file_stem()
         .and_then(|v| v.to_str())
-        .unwrap_or("未命名文件")
+        .unwrap_or("Untitled")
         .to_string();
     let path_str = path.to_string_lossy().to_string();
     let created_at = file_created_ms_for_sort(path);

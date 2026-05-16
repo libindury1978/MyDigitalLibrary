@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "../i18n/I18nProvider";
 
 export function AudioInlinePlayer(props: {
   src: string;
@@ -7,6 +8,7 @@ export function AudioInlinePlayer(props: {
   onError: () => void;
 }) {
   const { src, cardId, onReady, onError } = props;
+  const { t } = useI18n();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -72,7 +74,7 @@ export function AudioInlinePlayer(props: {
             void togglePlay();
           }}
           className="rounded-full bg-white/10 px-3 py-2 text-zinc-100 transition hover:bg-white/15"
-          aria-label="播放/暂停音频"
+          aria-label={t("player.audioPlayPause")}
         >
           {playing ? (
             <svg width="18" height="18" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -97,12 +99,12 @@ export function AudioInlinePlayer(props: {
           value={Math.min(currentTime, duration || 0)}
           onChange={(e) => seekTo(Number(e.target.value))}
           className="video-progress flex-1"
-          aria-label={`音频进度-${cardId}`}
+          aria-label={t("player.audioProgress", { id: cardId })}
         />
       </div>
 
       <div className="mt-2 text-[10px] text-zinc-200/70">
-        {duration ? `${Math.floor(currentTime)}s / ${Math.floor(duration)}s` : "加载中..."}
+        {duration ? `${Math.floor(currentTime)}s / ${Math.floor(duration)}s` : t("player.loading")}
       </div>
     </div>
   );

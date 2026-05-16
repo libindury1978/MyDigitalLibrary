@@ -1,5 +1,8 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import type { Dispatch, RefObject, SetStateAction } from "react";
+import { useI18n } from "../i18n/I18nProvider";
+import { categoryLabel } from "../i18n/translate";
+import { categoryEquals } from "../lib/mediaCategory";
 import type { MediaItem, ShareTemplate } from "../types/media";
 import { AudioInlinePlayer } from "./AudioInlinePlayer";
 import { VideoInlinePlayer } from "./VideoInlinePlayer";
@@ -63,6 +66,8 @@ export function DetailModal(props: DetailModalProps) {
     publishPreviewText,
   } = props;
 
+  const { t } = useI18n();
+
   return (
     <div
       ref={overlayRef}
@@ -79,7 +84,7 @@ export function DetailModal(props: DetailModalProps) {
               type="button"
               onClick={onClose}
               className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/25 px-3 py-2 text-sm font-medium text-zinc-100 transition hover:border-white/35 hover:bg-white/10"
-              aria-label="返回作品列表"
+              aria-label={t("detail.backAria")}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path
@@ -90,17 +95,17 @@ export function DetailModal(props: DetailModalProps) {
                   strokeLinejoin="round"
                 />
               </svg>
-              返回
+              {t("detail.back")}
             </button>
           </div>
           <div className="shrink-0 bg-black">
-            {card.category === "图片" && card.path ? (
+            {categoryEquals(card.category, "image") && card.path ? (
               <img
                 src={convertFileSrc(card.path)}
                 alt={card.title}
                 className="mx-auto block max-h-[min(48svh,28rem)] w-full object-contain"
               />
-            ) : card.category === "视频" && card.path ? (
+            ) : categoryEquals(card.category, "video") && card.path ? (
               <div className="relative mx-auto aspect-video w-full max-h-[min(52svh,28rem)] shrink-0 overflow-hidden bg-black">
                 <div className="absolute inset-0">
                   <VideoInlinePlayer
@@ -115,7 +120,7 @@ export function DetailModal(props: DetailModalProps) {
                   />
                 </div>
               </div>
-            ) : card.category === "音频" && card.path ? (
+            ) : categoryEquals(card.category, "audio") && card.path ? (
               <div className="flex min-h-[7rem] max-h-[min(32svh,16rem)] w-full items-center justify-center bg-gradient-to-br from-zinc-700/40 via-zinc-800/50 to-zinc-900 px-4 py-4 sm:px-6">
                 <AudioInlinePlayer
                   src={convertFileSrc(card.path)}
@@ -132,15 +137,15 @@ export function DetailModal(props: DetailModalProps) {
             <div className="min-w-0">
               <h3 className="break-words text-lg font-semibold text-white">{card.title}</h3>
               <p className="mt-1 text-xs text-zinc-400">
-                {card.category}
-                {card.extension ? ` · .${card.extension}` : " · 占位数据"}
+                {categoryLabel(t, card.category)}
+                {card.extension ? ` · .${card.extension}` : ` · ${t("card.placeholderData")}`}
               </p>
             </div>
 
             <div>
-              <p className="mb-1 text-xs text-zinc-400">文件路径</p>
+              <p className="mb-1 text-xs text-zinc-400">{t("detail.filePath")}</p>
               <p className="max-h-40 overflow-y-auto rounded-lg bg-black/30 p-3 text-xs text-zinc-300 break-all">
-                {card.path || "演示占位卡片没有真实路径"}
+                {card.path || t("detail.noDemoPath")}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
@@ -149,7 +154,7 @@ export function DetailModal(props: DetailModalProps) {
                   disabled={!card.path}
                   className="rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-zinc-100 transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  分享
+                  {t("detail.share")}
                 </button>
 
                 <div className="relative" ref={publishAssistRef}>
@@ -162,12 +167,12 @@ export function DetailModal(props: DetailModalProps) {
                     disabled={!card.path}
                     className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-zinc-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    发布辅助
+                    {t("detail.publishAssist")}
                   </button>
                   {showShareMenu ? (
                     <div className="absolute left-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-xl border border-white/15 bg-zinc-950/90 shadow-soft backdrop-blur">
                       <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-400/80">
-                        文案与平台
+                        {t("detail.copyAndPlatform")}
                       </div>
                       <button
                         type="button"
@@ -177,7 +182,7 @@ export function DetailModal(props: DetailModalProps) {
                         }}
                         className="w-full px-3 py-2 text-left text-xs text-zinc-100 hover:bg-white/10"
                       >
-                        复制发布文案
+                        {t("detail.copyPublishText")}
                       </button>
                       <button
                         type="button"
@@ -187,7 +192,7 @@ export function DetailModal(props: DetailModalProps) {
                         }}
                         className="w-full px-3 py-2 text-left text-xs text-zinc-100 hover:bg-white/10"
                       >
-                        打开 X 发布页
+                        {t("detail.openX")}
                       </button>
                     </div>
                   ) : null}
@@ -203,12 +208,12 @@ export function DetailModal(props: DetailModalProps) {
                     disabled={!card.path}
                     className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-zinc-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    更多
+                    {t("detail.more")}
                   </button>
                   {showFileMenu ? (
                     <div className="absolute left-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-xl border border-white/15 bg-zinc-950/90 shadow-soft backdrop-blur">
                       <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-400/80">
-                        文件操作
+                        {t("detail.fileActions")}
                       </div>
                       <button
                         type="button"
@@ -218,7 +223,7 @@ export function DetailModal(props: DetailModalProps) {
                         }}
                         className="w-full px-3 py-2 text-left text-xs text-zinc-100 hover:bg-white/10"
                       >
-                        在系统中打开文件
+                        {t("menu.openInSystem")}
                       </button>
                       <button
                         type="button"
@@ -228,7 +233,7 @@ export function DetailModal(props: DetailModalProps) {
                         }}
                         className="w-full px-3 py-2 text-left text-xs text-zinc-100 hover:bg-white/10"
                       >
-                        复制文件路径
+                        {t("menu.copyPath")}
                       </button>
                       <button
                         type="button"
@@ -238,7 +243,7 @@ export function DetailModal(props: DetailModalProps) {
                         }}
                         className="w-full px-3 py-2 text-left text-xs text-zinc-100 hover:bg-white/10"
                       >
-                        在 Finder 显示
+                        {t("menu.revealInFinder")}
                       </button>
                     </div>
                   ) : null}
@@ -249,7 +254,7 @@ export function DetailModal(props: DetailModalProps) {
                   disabled={!card.path}
                   className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-zinc-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  移动到...
+                  {t("detail.moveTo")}
                 </button>
                 <button
                   type="button"
@@ -257,13 +262,13 @@ export function DetailModal(props: DetailModalProps) {
                   disabled={!card.path}
                   className="rounded-lg border border-rose-400/40 px-3 py-1.5 text-xs text-rose-300 transition hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  仅从应用中移除
+                  {t("detail.removeFromApp")}
                 </button>
               </div>
             </div>
 
             <div>
-              <p className="mb-1 text-xs text-zinc-400">备注</p>
+              <p className="mb-1 text-xs text-zinc-400">{t("detail.notes")}</p>
               <textarea
                 value={notes[card.id] ?? ""}
                 onChange={(event) =>
@@ -272,36 +277,36 @@ export function DetailModal(props: DetailModalProps) {
                     [card.id]: event.target.value,
                   }))
                 }
-                placeholder="在这里记录你的想法（会自动随文件保存）"
+                placeholder={t("detail.notesPlaceholder")}
                 className="min-h-28 max-h-[min(36svh,14rem)] w-full resize-y rounded-lg border border-white/15 bg-black/20 p-3 text-sm text-zinc-100 outline-none transition focus:border-white/35"
               />
             </div>
 
             <div>
-              <p className="mb-1 text-xs text-zinc-400">发布文案模板（全局）</p>
+              <p className="mb-1 text-xs text-zinc-400">{t("detail.publishTemplate")}</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <input
                   value={shareTemplate.hashtags}
                   onChange={(e) => setShareTemplate((prev) => ({ ...prev, hashtags: e.target.value }))}
-                  placeholder="追加话题/标签（可选，如 #旅行 #摄影）"
+                  placeholder={t("detail.hashtagsPlaceholder")}
                   className="w-full rounded-lg border border-white/15 bg-black/20 px-3 py-2 text-xs text-zinc-100 outline-none transition focus:border-white/35"
                 />
                 <input
                   value={shareTemplate.link}
                   onChange={(e) => setShareTemplate((prev) => ({ ...prev, link: e.target.value }))}
-                  placeholder="追加链接（可选）"
+                  placeholder={t("detail.linkPlaceholder")}
                   className="w-full rounded-lg border border-white/15 bg-black/20 px-3 py-2 text-xs text-zinc-100 outline-none transition focus:border-white/35"
                 />
               </div>
               <div className="mt-2 rounded-lg border border-white/10 bg-black/20 p-3">
-                <p className="text-[10px] uppercase tracking-wider text-zinc-400/80">预览文案（将被复制/用于 X）</p>
+                <p className="text-[10px] uppercase tracking-wider text-zinc-400/80">{t("detail.previewLabel")}</p>
                 <p className="mt-2 max-h-[min(32svh,13rem)] overflow-y-auto whitespace-pre-wrap break-words text-xs text-zinc-200">
-                  {publishPreviewText || "（空）先写备注，或填入话题/链接来生成文案"}
+                  {publishPreviewText || t("detail.previewEmpty")}
                 </p>
               </div>
               <div className="mt-2 space-y-1 text-[11px] text-zinc-400/90">
-                <p>规则：优先用“备注”，没有备注就用“文件名”。</p>
-                <p>然后把你在这里填的“话题/标签、链接”追加到末尾。</p>
+                <p>{t("detail.rule1")}</p>
+                <p>{t("detail.rule2")}</p>
               </div>
             </div>
           </div>

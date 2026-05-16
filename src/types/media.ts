@@ -1,3 +1,5 @@
+export type MediaCategory = "video" | "audio" | "image" | "article";
+
 export type MediaItem = {
   id: string;
   category: string;
@@ -16,4 +18,4 @@ export type ShareTemplate = {
 export type SortBy = "title" | "extension" | "path" | "created";
 export type SortDir = "asc" | "desc";
 
-export type CategoryTab = { label: string; icon: string };
+export type CategoryTab = { id: MediaCategory; icon: string };

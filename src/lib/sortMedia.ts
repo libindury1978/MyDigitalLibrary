@@ -1,11 +1,6 @@
 import type { MediaItem, SortBy, SortDir } from "../types/media";
 
-export const SORT_OPTIONS: { id: SortBy; label: string }[] = [
-  { id: "title", label: "名称" },
-  { id: "extension", label: "扩展名" },
-  { id: "path", label: "路径" },
-  { id: "created", label: "创建时间" },
-];
+export const SORT_OPTION_IDS: SortBy[] = ["title", "extension", "path", "created"];
 
 const VALID_SORT_BY = new Set<SortBy>(["title", "extension", "path", "created"]);
 

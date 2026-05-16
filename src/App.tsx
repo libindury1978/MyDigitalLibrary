@@ -6,15 +6,20 @@ import "./App.css";
 
 import { AudioInlinePlayer } from "./components/AudioInlinePlayer";
 import { DetailModal } from "./components/DetailModal";
+import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { VideoInlinePlayer } from "./components/VideoInlinePlayer";
-import { categories, cardHeights, demoCards } from "./constants/library";
+import { buildDemoCards, cardHeights, categoryTabs, DEFAULT_CATEGORY } from "./constants/library";
+import { useI18n } from "./i18n/I18nProvider";
+import { categoryLabel } from "./i18n/translate";
 import { usePersistedLibrary } from "./hooks/usePersistedLibrary";
 import { mergeById } from "./lib/mergeItems";
-import { compareMediaItems, SORT_OPTIONS } from "./lib/sortMedia";
-import type { MediaItem } from "./types/media";
+import { categoryEquals, isMediaCategory, normalizeCategory } from "./lib/mediaCategory";
+import { compareMediaItems, SORT_OPTION_IDS } from "./lib/sortMedia";
+import type { MediaCategory, MediaItem } from "./types/media";
 
 function App() {
-  const [activeCategory, setActiveCategory] = useState(categories[0].label);
+  const { t } = useI18n();
+  const [activeCategory, setActiveCategory] = useState<MediaCategory>(DEFAULT_CATEGORY);
   const [items, setItems] = useState<MediaItem[]>([]);
   const [libraryPath, setLibraryPath] = useState("");
   const [loading, setLoading] = useState(false);
@@ -60,6 +65,8 @@ function App() {
   const fileMenuRef = useRef<HTMLDivElement | null>(null);
   const detailOverlayRef = useRef<HTMLDivElement | null>(null);
 
+  const demoCards = useMemo(() => buildDemoCards(t), [t]);
+
   const sourceCards =
     items.length > 0
       ? items
@@ -72,7 +79,7 @@ function App() {
       sourceCards.filter(
         (card) =>
           !hiddenIds.has(card.id) &&
-          card.category === activeCategory &&
+          normalizeCategory(card.category) === activeCategory &&
           card.title.toLowerCase().includes(search.trim().toLowerCase()),
       ),
     [activeCategory, hiddenIds, search, sourceCards],
@@ -88,7 +95,7 @@ function App() {
     () => sourceCards.filter((card) => hiddenIds.has(card.id)),
     [hiddenIds, sourceCards],
   );
-  const isMediaCategory = activeCategory === "视频" || activeCategory === "音频";
+  const activeIsMediaLayout = isMediaCategory(activeCategory);
   const isCurrentPinned = libraryPath ? pinnedRootPaths.includes(libraryPath) : false;
   const displayedCards = useMemo(
     () => sortedFilteredCards.slice(0, visibleCount),
@@ -155,7 +162,7 @@ function App() {
     const selected = await open({
       directory: true,
       multiple: false,
-      title: "选择你的作品根目录",
+      title: t("dialog.pickRoot"),
     });
 
     if (!selected || Array.isArray(selected)) {
@@ -168,7 +175,7 @@ function App() {
       const data = await invoke<MediaItem[]>("scan_library", { rootPath: selected });
       if (!data || data.length === 0) {
         setItems((prev) => prev);
-        setError("该目录下没有识别到可展示的文件（可试试：mp4/mov/mp3/jpg/png/pdf 等）");
+        setError(t("error.noFilesInDir"));
         return;
       }
 
@@ -177,11 +184,14 @@ function App() {
 
         // If current category yields nothing, auto switch to the largest category
         // so the user immediately sees results.
-        const hasCurrent = merged.some((it) => it.category === activeCategory);
+        const hasCurrent = merged.some((it) => normalizeCategory(it.category) === activeCategory);
         if (!hasCurrent) {
-          const counts = new Map<string, number>();
-          for (const it of merged) counts.set(it.category, (counts.get(it.category) ?? 0) + 1);
-          let best: string | null = null;
+          const counts = new Map<MediaCategory, number>();
+          for (const it of merged) {
+            const cat = normalizeCategory(it.category);
+            if (cat) counts.set(cat, (counts.get(cat) ?? 0) + 1);
+          }
+          let best: MediaCategory | null = null;
           let bestCount = -1;
           for (const [cat, cnt] of counts.entries()) {
             if (cnt > bestCount) {
@@ -195,7 +205,7 @@ function App() {
         return merged;
       });
     } catch {
-      setError("扫描失败，请换一个目录重试");
+      setError(t("error.scanFailed"));
     } finally {
       setLoading(false);
     }
@@ -206,7 +216,7 @@ function App() {
     const selected = await open({
       directory: false,
       multiple: true,
-      title: "选择要添加的作品文件",
+      title: t("dialog.pickFiles"),
     });
     if (!selected) return;
     const paths = Array.isArray(selected) ? selected : [selected];
@@ -214,7 +224,7 @@ function App() {
     try {
       const added = await invoke<MediaItem[]>("add_files", { paths });
       if (added.length === 0) {
-        setError("没有识别到可支持的文件类型");
+        setError(t("error.noSupportedFiles"));
       } else {
         setItems((prev) => mergeById(prev, added));
         setAddedFilePaths((prev) => {
@@ -229,7 +239,7 @@ function App() {
         });
       }
     } catch {
-      setError("添加文件失败，请重试");
+      setError(t("error.addFilesFailed"));
     } finally {
       setLoading(false);
     }
@@ -298,9 +308,9 @@ function App() {
         await revealItemInDir(selectedCard.path);
       } catch {
         setError(
-          `打开文件失败，请检查文件是否仍存在。错误：${
-            openErr instanceof Error ? openErr.message : "未知错误"
-          }`,
+          t("error.openFileFailed", {
+            detail: openErr instanceof Error ? openErr.message : t("error.unknown"),
+          }),
         );
       }
     }
@@ -314,7 +324,7 @@ function App() {
     const selected = await open({
       directory: true,
       multiple: false,
-      title: "选择目标文件夹",
+      title: t("dialog.pickMoveTarget"),
     });
     if (!selected || Array.isArray(selected)) return;
     try {
@@ -341,13 +351,13 @@ function App() {
         return Array.from(next);
       });
     } catch {
-      setError("移动文件失败，请检查目标目录权限");
+      setError(t("error.moveFailed"));
     }
   };
 
   const removeCurrentFromView = () => {
     if (!selectedCard?.path) return;
-    const ok = window.confirm(`仅在应用中隐藏该文件？\n${selectedCard.title}`);
+    const ok = window.confirm(t("confirm.hideFile", { title: selectedCard.title }));
     if (!ok) return;
     setHiddenIds((prev) => new Set(prev).add(selectedCard.id));
     closeModalAndMenus();
@@ -369,7 +379,7 @@ function App() {
         document.execCommand("copy");
         document.body.removeChild(el);
       } catch {
-        setError("复制路径失败");
+        setError(t("error.copyPathFailed"));
       }
     }
   };
@@ -389,7 +399,7 @@ function App() {
         document.execCommand("copy");
         document.body.removeChild(el);
       } catch {
-        setError("复制路径失败");
+        setError(t("error.copyPathFailed"));
       }
     }
   };
@@ -398,7 +408,11 @@ function App() {
     try {
       await invoke("share_file", { path });
     } catch (e) {
-      setError(`分享失败：${e instanceof Error ? e.message : "未知错误"}`);
+      setError(
+        t("error.shareFailed", {
+          detail: e instanceof Error ? e.message : t("error.unknown"),
+        }),
+      );
     }
   };
 
@@ -420,7 +434,7 @@ function App() {
     if (!selectedCard) return;
     const text = buildPublishText(selectedCard);
     if (!text.trim()) {
-      setError("没有可复制的发布文案（先填写备注或模板）");
+      setError(t("error.noPublishText"));
       return;
     }
     try {
@@ -437,7 +451,7 @@ function App() {
         document.execCommand("copy");
         document.body.removeChild(el);
       } catch {
-        setError("复制发布文案失败");
+        setError(t("error.copyPublishFailed"));
       }
     }
   };
@@ -453,7 +467,7 @@ function App() {
     try {
       await openUrl(url);
     } catch {
-      setError("打开 X 发布页失败");
+      setError(t("error.openXFailed"));
     }
   };
 
@@ -462,7 +476,11 @@ function App() {
     try {
       await invoke("share_file", { path: selectedCard.path });
     } catch (e) {
-      setError(`分享失败：${e instanceof Error ? e.message : "未知错误"}`);
+      setError(
+        t("error.shareFailed", {
+          detail: e instanceof Error ? e.message : t("error.unknown"),
+        }),
+      );
     }
   };
 
@@ -492,25 +510,26 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-black text-zinc-100">
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
-        <aside className="sticky top-0 h-screen w-64 shrink-0 border-r border-white/10 bg-black/30 p-6 backdrop-blur-xl">
-          <h1 className="mb-8 text-xl font-semibold tracking-wide text-white">My Digital Library</h1>
+        <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-white/10 bg-black/30 p-6 backdrop-blur-xl">
+          <h1 className="mb-8 text-xl font-semibold tracking-wide text-white">{t("app.title")}</h1>
           <nav className="space-y-2">
-            {categories.map((category) => (
+            {categoryTabs.map((category) => (
               <button
-                key={category.label}
+                key={category.id}
                 type="button"
-                onClick={() => setActiveCategory(category.label)}
+                onClick={() => setActiveCategory(category.id)}
                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm transition ${
-                  activeCategory === category.label
+                  activeCategory === category.id
                     ? "bg-white text-zinc-900 shadow-soft"
                     : "text-zinc-300 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <span className="text-base">{category.icon}</span>
-                <span>{category.label}</span>
+                <span>{categoryLabel(t, category.id)}</span>
               </button>
             ))}
           </nav>
+          <LanguageSwitcher />
         </aside>
 
         <main className="flex-1 p-8 md:p-10">
@@ -522,7 +541,7 @@ function App() {
                 onKeyDown={(event) => {
                   if (event.key === "Enter") runSearch();
                 }}
-                placeholder="搜索作品..."
+                placeholder={t("search.placeholder")}
                 className="w-56 rounded-lg border border-white/15 bg-black/20 px-3 py-1.5 text-xs text-zinc-100 outline-none transition focus:border-white/35"
               />
               <button
@@ -530,61 +549,61 @@ function App() {
                 onClick={runSearch}
                 className="rounded-lg border border-white/20 bg-black/10 px-3 py-1.5 text-xs text-zinc-100 transition hover:bg-white/10"
               >
-                搜索
+                {t("search.button")}
               </button>
             </div>
             <div className="flex flex-wrap items-center gap-2 border-l border-white/10 pl-4">
-              <span className="text-xs text-zinc-500">排序</span>
-              {SORT_OPTIONS.map((opt) => (
+              <span className="text-xs text-zinc-500">{t("sort.label")}</span>
+              {SORT_OPTION_IDS.map((id) => (
                 <button
-                  key={opt.id}
+                  key={id}
                   type="button"
-                  aria-pressed={sortBy === opt.id}
-                  aria-label={`按${opt.label}排序`}
-                  onClick={() => setSortBy(opt.id)}
+                  aria-pressed={sortBy === id}
+                  aria-label={t("sort.byField", { field: t(`sort.${id}`) })}
+                  onClick={() => setSortBy(id)}
                   className={`rounded-lg border px-3 py-1.5 text-xs transition ${
-                    sortBy === opt.id
+                    sortBy === id
                       ? "border-white/40 bg-white/15 text-white"
                       : "border-white/20 bg-black/10 text-zinc-100 hover:bg-white/10"
                   }`}
                 >
-                  {opt.label}
+                  {t(`sort.${id}`)}
                 </button>
               ))}
               <button
                 type="button"
-                aria-label={sortDir === "asc" ? "当前升序，点击切换为降序" : "当前降序，点击切换为升序"}
+                aria-label={sortDir === "asc" ? t("sort.toggleAsc") : t("sort.toggleDesc")}
                 aria-pressed={sortDir === "desc"}
                 onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
                 className="rounded-lg border border-white/20 bg-black/10 px-3 py-1.5 text-xs text-zinc-100 transition hover:bg-white/10"
               >
-                {sortDir === "asc" ? "升序" : "降序"}
+                {sortDir === "asc" ? t("sort.asc") : t("sort.desc")}
               </button>
             </div>
           </div>
           <header className="mb-8">
-            <h2 className="text-3xl font-semibold text-white">精选作品</h2>
+            <h2 className="text-3xl font-semibold text-white">{t("library.featured")}</h2>
             <div className="mt-4 flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={pickFolder}
                 className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200"
               >
-                {loading ? "扫描中..." : "选择作品文件夹"}
+                {loading ? t("library.scanning") : t("library.pickFolder")}
               </button>
               <button
                 type="button"
                 onClick={addFiles}
                 className="rounded-xl border border-white/20 px-4 py-2 text-sm text-zinc-100 transition hover:bg-white/10"
               >
-                添加作品文件
+                {t("library.addFiles")}
               </button>
               <button
                 type="button"
                 onClick={() => setShowRemovedPanel((prev) => !prev)}
                 className="rounded-xl border border-white/20 px-4 py-2 text-sm text-zinc-100 transition hover:bg-white/10"
               >
-                已移除列表（{removedCards.length}）
+                {t("library.removedList", { count: removedCards.length })}
               </button>
               {libraryPath ? (
                 <>
@@ -593,22 +612,22 @@ function App() {
                     onClick={togglePinCurrentFolder}
                     className="rounded-xl border border-white/20 px-4 py-2 text-sm text-zinc-100 transition hover:bg-white/10"
                   >
-                    {isCurrentPinned ? "取消保留此目录" : "保留此目录"}
+                    {isCurrentPinned ? t("library.unpinFolder") : t("library.pinFolder")}
                   </button>
                   <button
                     type="button"
                     onClick={clearLibrary}
                     className="rounded-xl border border-white/20 px-4 py-2 text-sm text-zinc-200 transition hover:bg-white/10"
                   >
-                    清除当前目录
+                    {t("library.clearFolder")}
                   </button>
                 </>
               ) : null}
             </div>
             <p className="mt-3 text-xs text-zinc-500">
               {libraryPath
-                ? `当前目录：${libraryPath}`
-                : "尚未选择本地目录，当前展示的是演示占位内容"}
+                ? t("library.currentDir", { path: libraryPath })
+                : t("library.demoHint")}
             </p>
             {error ? <p className="mt-2 text-sm text-rose-400">{error}</p> : null}
           </header>
@@ -616,18 +635,18 @@ function App() {
           {showRemovedPanel ? (
             <section className="mb-6 rounded-2xl border border-white/10 bg-zinc-900/60 p-4">
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-medium text-zinc-100">已移除列表</h3>
+                <h3 className="text-sm font-medium text-zinc-100">{t("removed.title")}</h3>
                 <button
                   type="button"
                   onClick={restoreAll}
                   disabled={removedCards.length === 0}
                   className="rounded-lg border border-white/20 px-3 py-1.5 text-xs text-zinc-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  全部恢复
+                  {t("removed.restoreAll")}
                 </button>
               </div>
               {removedCards.length === 0 ? (
-                <p className="text-xs text-zinc-400">当前没有被移除的作品</p>
+                <p className="text-xs text-zinc-400">{t("removed.empty")}</p>
               ) : (
                 <div className="max-h-40 space-y-2 overflow-auto pr-1">
                   {removedCards.map((card) => (
@@ -637,14 +656,14 @@ function App() {
                     >
                       <div>
                         <p className="truncate text-xs text-zinc-100">{card.title}</p>
-                        <p className="text-[11px] text-zinc-400">{card.category}</p>
+                        <p className="text-[11px] text-zinc-400">{categoryLabel(t, card.category)}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => restoreOne(card.id)}
                         className="rounded-lg border border-white/20 px-2.5 py-1 text-xs text-zinc-200 transition hover:bg-white/10"
                       >
-                        恢复
+                        {t("removed.restore")}
                       </button>
                     </div>
                   ))}
@@ -655,7 +674,7 @@ function App() {
 
           <section
             className={
-              isMediaCategory
+              activeIsMediaLayout
                 ? "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
                 : "columns-1 gap-5 sm:columns-2 xl:columns-3 2xl:columns-4"
             }
@@ -665,11 +684,11 @@ function App() {
                 key={card.id}
                 onContextMenu={(e) => openContextMenu(e, card)}
                 className={`apple-card fade-in-up rounded-2xl border border-white/10 bg-zinc-900/60 shadow-soft ${
-                  isMediaCategory ? "" : "mb-5 break-inside-avoid"
+                  activeIsMediaLayout ? "" : "mb-5 break-inside-avoid"
                 }`}
               >
                 <div className="overflow-hidden rounded-t-2xl">
-                  {card.category === "图片" && card.path ? (
+                  {categoryEquals(card.category, "image") && card.path ? (
                     <img
                       src={convertFileSrc(card.path)}
                       alt={card.title}
@@ -689,10 +708,10 @@ function App() {
                       style={{ height: `${cardHeights[index % cardHeights.length]}px` }}
                       className="flex w-full items-center justify-center bg-gradient-to-br from-zinc-700/40 via-zinc-800/50 to-zinc-900 text-xs text-zinc-400"
                     >
-                      缩略图加载失败
+                      {t("card.thumbFailed")}
                     </div>
                   ) : null}
-                  {card.category === "视频" && card.path ? (
+                  {categoryEquals(card.category, "video") && card.path ? (
                     <div
                       data-media-id={card.id}
                       ref={(el) => {
@@ -702,23 +721,23 @@ function App() {
                       {!inViewMediaIds.has(card.id) ? (
                         <div
                           style={{
-                            height: isMediaCategory ? "220px" : `${cardHeights[index % cardHeights.length]}px`,
+                            height: activeIsMediaLayout ? "220px" : `${cardHeights[index % cardHeights.length]}px`,
                           }}
                           className="flex w-full items-center justify-center bg-black text-xs text-zinc-500"
                         >
-                          滚动到可视区域后加载视频
+                          {t("card.scrollToLoadVideo")}
                         </div>
                       ) : (
                         <div className="relative">
                           {mediaError[card.id] ? (
                             <div className="absolute left-3 top-3 z-10 rounded-lg bg-black/40 px-2 py-1 text-[11px] text-zinc-200">
-                              视频加载失败
+                              {t("card.videoLoadFailed")}
                             </div>
                           ) : null}
                           <VideoInlinePlayer
                             src={convertFileSrc(card.path)}
                             height={
-                              isMediaCategory
+                              activeIsMediaLayout
                                 ? "220px"
                                 : `${cardHeights[index % cardHeights.length]}px`
                             }
@@ -741,7 +760,7 @@ function App() {
                       )}
                     </div>
                   ) : null}
-                  {card.category === "音频" && card.path ? (
+                  {categoryEquals(card.category, "audio") && card.path ? (
                     <div
                       data-media-id={card.id}
                       ref={(el) => {
@@ -751,13 +770,13 @@ function App() {
                     >
                       {!inViewMediaIds.has(card.id) ? (
                         <div className="w-full rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-xs text-zinc-500">
-                          滚动到可视区域后加载音频
+                          {t("card.scrollToLoadAudio")}
                         </div>
                       ) : (
                         <div className="relative w-full">
                           {!mediaReady[card.id] ? (
                             <div className="absolute inset-0 flex items-center justify-center rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-xs text-zinc-400 pointer-events-none">
-                              正在加载音频...
+                              {t("card.loadingAudio")}
                             </div>
                           ) : null}
                           <div className={mediaReady[card.id] ? "opacity-100" : "opacity-0"}>
@@ -777,9 +796,9 @@ function App() {
                       )}
                     </div>
                   ) : null}
-                  {(card.category !== "图片" &&
-                    card.category !== "视频" &&
-                    card.category !== "音频") ||
+                  {(!categoryEquals(card.category, "image") &&
+                    !categoryEquals(card.category, "video") &&
+                    !categoryEquals(card.category, "audio")) ||
                   !card.path ? (
                     <div
                       style={{ height: `${cardHeights[index % cardHeights.length]}px` }}
@@ -790,15 +809,15 @@ function App() {
                 <div className="p-4">
                   <h3 className="truncate text-sm font-medium text-zinc-100">{card.title}</h3>
                   <p className="mt-1 text-xs text-zinc-400">
-                    {card.category}
-                    {card.extension ? ` · .${card.extension}` : " · 占位数据"}
+                    {categoryLabel(t, card.category)}
+                    {card.extension ? ` · .${card.extension}` : ` · ${t("card.placeholderData")}`}
                   </p>
                   <button
                     type="button"
                     onClick={() => setSelectedCard(card)}
                     className="mt-3 rounded-lg border border-white/15 px-3 py-1.5 text-xs text-zinc-200 transition hover:bg-white/10"
                   >
-                    查看详情
+                    {t("card.viewDetails")}
                   </button>
                 </div>
               </article>
@@ -807,11 +826,11 @@ function App() {
 
           {sortedFilteredCards.length === 0 ? (
             <div className="mt-10 rounded-2xl border border-white/10 bg-zinc-900/50 p-6 text-sm text-zinc-400">
-              当前分类暂无文件，请切换分类或重新选择目录。
+              {t("library.emptyCategory")}
             </div>
           ) : null}
           {sortedFilteredCards.length > displayedCards.length ? (
-            <div className="mt-6 text-center text-xs text-zinc-500">正在继续加载更多作品...</div>
+            <div className="mt-6 text-center text-xs text-zinc-500">{t("library.loadingMore")}</div>
           ) : null}
         </main>
       </div>
@@ -874,7 +893,7 @@ function App() {
                 closeContextMenu();
               }}
             >
-              查看详情
+              {t("menu.viewDetails")}
             </button>
             <button
               type="button"
@@ -884,7 +903,7 @@ function App() {
                 closeContextMenu();
               }}
             >
-              在系统中打开文件
+              {t("menu.openInSystem")}
             </button>
             <button
               type="button"
@@ -894,7 +913,7 @@ function App() {
                 closeContextMenu();
               }}
             >
-              在 Finder 显示
+              {t("menu.revealInFinder")}
             </button>
             <div className="my-1 h-px bg-white/10" />
             <button
@@ -905,7 +924,7 @@ function App() {
                 closeContextMenu();
               }}
             >
-              复制文件路径
+              {t("menu.copyPath")}
             </button>
             <button
               type="button"
@@ -915,7 +934,7 @@ function App() {
                 closeContextMenu();
               }}
             >
-              系统分享面板…
+              {t("menu.systemShare")}
             </button>
             <div className="my-1 h-px bg-white/10" />
             <button
@@ -926,7 +945,7 @@ function App() {
                 closeContextMenu();
               }}
             >
-              仅从应用中移除
+              {t("menu.removeFromApp")}
             </button>
           </div>
         </div>

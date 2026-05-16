@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "../i18n/I18nProvider";
 
 export function VideoInlinePlayer(props: {
   src: string;
@@ -12,6 +13,7 @@ export function VideoInlinePlayer(props: {
   onThumbReady?: (cardId: string, dataUrl: string) => void;
 }) {
   const { src, height, cardId, poster, objectFit = "cover", onReady, onError, onThumbReady } = props;
+  const { t } = useI18n();
   const objectFitClass = objectFit === "contain" ? "object-contain" : "object-cover";
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [duration, setDuration] = useState(0);
@@ -333,7 +335,7 @@ export function VideoInlinePlayer(props: {
               e.stopPropagation();
               toggleMute();
             }}
-            aria-label="切换静音"
+            aria-label={t("player.toggleMute")}
           >
             {muted ? (
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -389,7 +391,7 @@ export function VideoInlinePlayer(props: {
               }
             }}
             className="video-volume w-20"
-            aria-label={`音量-${Math.round((muted ? 0 : volume) * 100)}%`}
+            aria-label={t("player.volume", { percent: Math.round((muted ? 0 : volume) * 100) })}
           />
         </div>
 
@@ -402,7 +404,7 @@ export function VideoInlinePlayer(props: {
               void togglePlay();
             }}
             className="rounded-full bg-black/45 px-4 py-3 text-zinc-100 transition hover:bg-black/60 backdrop-blur"
-            aria-label="播放/暂停"
+            aria-label={t("player.playPause")}
           >
             {playing ? (
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -432,11 +434,11 @@ export function VideoInlinePlayer(props: {
                 value={Math.min(currentTime, duration || 0)}
                 onChange={(e) => seekTo(Number(e.target.value))}
                 className="video-progress flex-1"
-                aria-label={`进度-${cardId}`}
+                aria-label={t("player.progress", { id: cardId })}
               />
             </div>
             <div className="mt-1 text-[10px] text-zinc-200/80">
-              {duration ? `${Math.floor(currentTime)}s / ${Math.floor(duration)}s` : "加载中..."}
+              {duration ? `${Math.floor(currentTime)}s / ${Math.floor(duration)}s` : t("player.loading")}
             </div>
           </div>
         </div>
