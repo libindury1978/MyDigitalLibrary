@@ -1,7 +1,9 @@
 {
-  "name": "tauri-app",
-  "private": true,
+  "name": "my-digital-library",
+  "private": false,
   "version": "0.1.0",
+  "description": "Local digital media library desktop app (Tauri + React)",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
