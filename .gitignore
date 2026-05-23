@@ -6,9 +6,9 @@
 /dist-ssr/
 /release/
 
-# Tauri / Rust build artifacts
-/src-tauri/target/
-/target/
+# Tauri / Rust build artifacts (any Cargo target dir)
+**/target/
+/src-tauri/src-tauri/
 
 # Logs
 logs

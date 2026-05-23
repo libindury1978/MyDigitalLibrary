@@ -6,7 +6,8 @@
 
 1. 阅读 [README.md](README.md)，在本地完成 `npm install` 与 `npm run tauri dev`。
 2. 确认你的改动不引入密钥、个人路径或大型二进制（`.app`、`.dmg` 等应通过 [Releases](https://github.com/libindury1978/MyDigitalLibrary/releases) 分发）。
-3. 大型功能建议先开 Issue 讨论，避免与维护者方向不一致。
+3. **不要提交构建产物**：包括但不限于 `target/`（Rust）、`node_modules/`、`dist/`、`release/`。这些目录已在 `.gitignore` 中；若使用 `git add -A`，提交前请用 `git status` 确认未误加入。
+4. 大型功能建议先开 Issue 讨论，避免与维护者方向不一致。
 
 ## 开发流程
 

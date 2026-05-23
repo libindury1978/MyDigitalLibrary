@@ -16,6 +16,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Reject committed build artifacts
+        run: |
+          if git ls-files '**/target/**' | grep -q .; then
+            echo "::error::Build artifacts under target/ must not be committed. Remove them and update .gitignore."
+            git ls-files '**/target/**' | head -20
+            exit 1
+          fi
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
